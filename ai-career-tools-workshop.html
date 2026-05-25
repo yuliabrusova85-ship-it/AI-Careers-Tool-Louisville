@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Career Tools Workshop Simulator | UofL Libraries</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #AD0000;
+  --red-dark: #8a0000;
+  --black: #000000;
+  --white: #ffffff;
+  --gray-light: #F5F5F5;
+  --gray-border: #E0E0E0;
+  --gray-text: #666666;
+  --green: #2E7D32;
+  --amber: #E65100;
+  --font: 'Helvetica Neue', Arial, sans-serif;
+}
+body {
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--black);
+  background: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+header { background: var(--red); color: var(--white); }
+.header-inner { max-width: 1100px; margin: 0 auto; padding: 20px 24px 24px; }
+.header-brand {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; opacity: 0.85; margin-bottom: 10px;
+}
+header h1 { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+.header-tagline { font-size: 15px; opacity: 0.9; }
+
+/* ── TAB NAV ── */
+.tab-nav {
+  background: var(--black);
+  display: flex;
+  overflow-x: auto;
+  border-bottom: none;
+}
+.tab-btn {
+  background: none; border: none; color: rgba(255,255,255,0.7);
+  font-family: var(--font); font-size: 15px; font-weight: 500;
+  padding: 14px 28px; cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--white); }
+.tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
+.tab-btn:focus-visible { outline: 2px solid var(--red); outline-offset: -2px; }
+
+/* ── MAIN LAYOUT ── */
+main { flex: 1; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+.section-header { margin-bottom: 28px; }
+.section-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.section-header p { color: var(--gray-text); font-size: 15px; }
+
+/* ── FORM ELEMENTS ── */
+label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+select, textarea {
+  width: 100%; font-family: var(--font); font-size: 15px;
+  border: 1px solid var(--gray-border); border-radius: 4px;
+  padding: 10px 12px; background: var(--white); color: var(--black);
+  transition: border-color 0.2s;
+}
+select:focus, textarea:focus {
+  outline: none; border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(173,0,0,0.1);
+}
+textarea { resize: vertical; line-height: 1.5; }
+.form-group { margin-bottom: 20px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  padding: 10px 20px; border: none; border-radius: 4px;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--red); color: var(--white); }
+.btn-primary:hover { background: var(--red-dark); }
+.btn-secondary { background: var(--black); color: var(--white); }
+.btn-secondary:hover { background: #333; }
+.btn-outline { background: var(--white); color: var(--black); border: 1px solid var(--gray-border); }
+.btn-outline:hover { background: var(--gray-light); }
+.btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── CARDS ── */
+.card { background: var(--gray-light); border: 1px solid var(--gray-border); border-radius: 6px; padding: 20px; }
+.card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+
+/* ── RESUME RESULTS ── */
+#resume-results { display: none; margin-top: 32px; }
+.score-display {
+  display: flex; align-items: center; gap: 20px;
+  background: var(--white); border: 2px solid var(--gray-border);
+  border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;
+}
+.score-number { font-size: 56px; font-weight: 700; color: var(--red); line-height: 1; }
+.score-info { flex: 1; }
+.score-label { font-size: 13px; color: var(--gray-text); }
+.score-classification {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 700; margin-top: 6px;
+}
+.class-needs { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
+.class-good  { background: #FFF8E1; color: #E65100; border: 1px solid #FFE082; }
+.class-strong{ background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+.chart-wrap {
+  position: relative; height: 280px; margin-bottom: 24px;
+  background: var(--white); border: 1px solid var(--gray-border);
+  border-radius: 6px; padding: 16px;
+}
+.comp-list { display: flex; flex-direction: column; gap: 10px; }
+.comp-item {
+  background: var(--white); border: 1px solid var(--gray-border);
+  border-radius: 6px; padding: 14px 16px;
+}
+.comp-item.found  { border-left: 4px solid var(--green); }
+.comp-item.missing{ border-left: 4px solid #bbb; }
+.comp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.comp-name { font-weight: 600; font-size: 15px; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; }
+.badge-found  { background: #E8F5E9; color: #2E7D32; }
+.badge-missing{ background: #F5F5F5; color: #888; }
+.kw-tags { margin-top: 6px; }
+.kw-tag {
+  display: inline-block; background: rgba(173,0,0,0.08); color: #7a0000;
+  border-radius: 3px; padding: 1px 6px; margin: 2px 2px 0 0;
+  font-size: 12px; font-weight: 500;
+}
+.suggestion { font-size: 13px; color: var(--gray-text); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--gray-border); }
+
+/* ── PROMPT BOX ── */
+.prompt-box {
+  display: none; background: var(--gray-light);
+  border: 1px solid var(--gray-border); border-radius: 6px;
+  padding: 16px; margin-top: 16px;
+}
+.prompt-box h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.prompt-text {
+  background: var(--white); border: 1px solid var(--gray-border); border-radius: 4px;
+  padding: 12px; font-size: 13px; font-family: var(--font); white-space: pre-wrap;
+  color: var(--black); line-height: 1.5; margin-bottom: 10px;
+  max-height: 220px; overflow-y: auto;
+}
+.copy-ok { font-size: 12px; color: var(--green); font-weight: 600; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
+.copy-ok.show { opacity: 1; }
+
+/* ── INTERVIEW ── */
+.q-display {
+  background: var(--red); color: var(--white); border-radius: 8px;
+  padding: 20px 24px; margin-bottom: 24px;
+  font-size: 18px; font-weight: 600; line-height: 1.4;
+}
+.star-explainer {
+  background: var(--gray-light); border: 1px solid var(--gray-border);
+  border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; font-size: 14px;
+}
+.star-explainer h3 { font-size: 14px; margin-bottom: 10px; }
+.star-row { display: flex; gap: 10px; margin-bottom: 7px; align-items: flex-start; }
+.star-row:last-child { margin-bottom: 0; }
+.sl {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; background: var(--red); color: var(--white);
+  border-radius: 50%; font-weight: 700; font-size: 13px;
+  flex-shrink: 0; margin-top: 1px;
+}
+.star-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.star-box label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gray-text); margin-bottom: 6px; }
+
+/* ── LINKEDIN ── */
+.li-score-panel {
+  background: var(--white); border-bottom: 1px solid var(--gray-border);
+  padding: 16px 0; margin-bottom: 28px;
+  position: sticky; top: 0; z-index: 10;
+}
+.li-score-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.li-score-big { font-size: 36px; font-weight: 700; color: var(--red); line-height: 1; }
+.li-score-info { flex: 1; min-width: 200px; }
+.score-bar-wrap { background: var(--gray-border); border-radius: 20px; height: 12px; overflow: hidden; margin: 8px 0; }
+.score-bar { height: 100%; border-radius: 20px; background: var(--red); transition: width 0.4s ease, background 0.4s; }
+.cl-section { margin-bottom: 24px; }
+.cl-section h3 {
+  font-size: 15px; font-weight: 700; padding-bottom: 8px;
+  border-bottom: 2px solid var(--red); margin-bottom: 12px;
+}
+.cl-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--gray-border);
+}
+.cl-item:last-child { border-bottom: none; }
+.cl-item input[type="checkbox"] {
+  width: 17px; height: 17px; margin-top: 2px;
+  accent-color: var(--red); cursor: pointer; flex-shrink: 0;
+}
+.cl-item label { font-weight: 400; font-size: 14px; cursor: pointer; margin: 0; line-height: 1.4; }
+
+/* ── TIPS ── */
+.tips-box {
+  background: #FFF8F8; border-left: 4px solid var(--red);
+  border-radius: 0 6px 6px 0; padding: 16px 20px; margin-top: 28px;
+}
+.tips-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.tips-box ul { padding-left: 18px; }
+.tips-box li { font-size: 14px; margin-bottom: 7px; }
+
+/* ── FOOTER ── */
+footer { background: var(--black); color: rgba(255,255,255,0.8); padding: 32px 24px; margin-top: auto; }
+.footer-inner { max-width: 1100px; margin: 0 auto; }
+.footer-disc {
+  font-size: 13px; line-height: 1.7; margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 20px;
+}
+.footer-disc strong { color: var(--white); }
+.footer-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-ghost {
+  background: transparent; color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.3); font-family: var(--font);
+  font-size: 13px; font-weight: 500; padding: 8px 16px;
+  border-radius: 4px; cursor: pointer; transition: background 0.2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+/* ── UTILITIES ── */
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-16 { margin-bottom: 16px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  header h1 { font-size: 20px; }
+  .tab-btn { padding: 12px 16px; font-size: 13px; }
+  .star-grid { grid-template-columns: 1fr; }
+  .score-display { flex-direction: column; align-items: flex-start; }
+  .score-number { font-size: 42px; }
+  .container { padding: 20px 16px; }
+  .li-score-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+/* ── PRINT ── */
+@media print {
+  .tab-nav, footer, .btn, .btn-row, .footer-actions { display: none !important; }
+  .tab-panel { display: block !important; page-break-before: always; }
+  .tab-panel:first-child { page-break-before: avoid; }
+  header { background: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header>
+  <div class="header-inner">
+    <div class="header-brand">University of Louisville Libraries</div>
+    <h1>AI Career Tools Workshop Simulator</h1>
+    <p class="header-tagline">Learn to use AI responsibly for your job search</p>
+  </div>
+</header>
+
+<!-- ════ TAB NAVIGATION ════ -->
+<nav class="tab-nav" role="tablist" aria-label="Workshop sections">
+  <button class="tab-btn active" data-tab="resume" role="tab" aria-selected="true" aria-controls="tab-resume">Resume Review</button>
+  <button class="tab-btn" data-tab="interview" role="tab" aria-selected="false" aria-controls="tab-interview">Interview Prep</button>
+  <button class="tab-btn" data-tab="linkedin" role="tab" aria-selected="false" aria-controls="tab-linkedin">LinkedIn Optimizer</button>
+</nav>
+
+<main>
+
+<!-- ════ TAB 1: RESUME REVIEW ════ -->
+<section id="tab-resume" class="tab-panel active" role="tabpanel" aria-labelledby="btn-resume">
+  <div class="container">
+    <div class="section-header">
+      <h2>Resume Review</h2>
+      <p>Paste your resume text below and analyze it against workforce competency frameworks to identify gaps and strengths.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="framework-select">Select Competency Framework</label>
+      <select id="framework-select">
+        <option value="nace">NACE Career Readiness Competencies (8 competencies)</option>
+        <option value="kycpe">KYCPE 10 Essential Employability Skills</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="resume-text">Paste Your Resume Text</label>
+      <textarea id="resume-text" rows="14"
+        placeholder="Paste your full resume here — work experience, education, skills, activities, and any other relevant sections..."></textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="analyzeResume()">Analyze Resume</button>
+
+    <!-- Results -->
+    <div id="resume-results">
+      <div class="score-display">
+        <div class="score-number" id="score-pct">—</div>
+        <div class="score-info">
+          <div class="score-label">Competency Coverage Score</div>
+          <div id="score-class" class="score-classification class-good">—</div>
+          <div class="score-label mt-8" id="score-detail"></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="resumeChart"></canvas></div>
+      <div id="comp-list" class="comp-list"></div>
+      <div class="card mt-24">
+        <h3>How AI Can Help Strengthen Your Resume</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:12px;">Copy one of these prompts into ChatGPT or Claude:</p>
+        <div id="ai-prompt-area"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TAB 2: INTERVIEW PREP ════ -->
+<section id="tab-interview" class="tab-panel" role="tabpanel" aria-labelledby="btn-interview">
+  <div class="container">
+    <div class="section-header">
+      <h2>Interview Prep</h2>
+      <p>Practice behavioral interview questions using the STAR method, then generate a prompt for AI-assisted feedback.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="q-select">Select a Behavioral Interview Question</label>
+      <select id="q-select" onchange="loadQuestion()">
+        <option value="">— Choose a question to practice —</option>
+      </select>
+    </div>
+
+    <div id="interview-workspace" style="display:none;">
+      <div class="q-display" id="q-display"></div>
+
+      <div class="star-explainer">
+        <h3>STAR Method Framework</h3>
+        <div class="star-row"><span class="sl">S</span><span><strong>Situation:</strong> Set the context — where were you, when, who was involved?</span></div>
+        <div class="star-row"><span class="sl">T</span><span><strong>Task:</strong> What was your specific responsibility or goal?</span></div>
+        <div class="star-row"><span class="sl">A</span><span><strong>Action:</strong> What specific steps did YOU take? (Use "I", not "we")</span></div>
+        <div class="star-row"><span class="sl">R</span><span><strong>Result:</strong> What was the outcome? Include numbers or specifics when possible.</span></div>
+      </div>
+
+      <div class="star-grid">
+        <div class="star-box">
+          <label for="star-s"><span class="sl">S</span> Situation — Set the context</label>
+          <textarea id="star-s" rows="5" placeholder="Describe the background and context..." oninput="saveStarAnswers()"></textarea>
+        </div>
+        <div class="star-box">
+          <label for="star-t"><span class="sl">T</span> Task — Your responsibility</label>
+          <textarea id="star-t" rows="5" placeholder="What was your specific role or goal?" oninput="saveStarAnswers()"></textarea>
+        </div>
+        <div class="star-box">
+          <label for="star-a"><span class="sl">A</span> Action — What you did</label>
+          <textarea id="star-a" rows="5" placeholder="Describe the specific actions you took..." oninput="saveStarAnswers()"></textarea>
+        </div>
+        <div class="star-box">
+          <label for="star-r"><span class="sl">R</span> Result — The outcome</label>
+          <textarea id="star-r" rows="5" placeholder="What was the result? Include metrics..." oninput="saveStarAnswers()"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="genInterviewPrompt()">Generate Practice Prompt</button>
+        <button class="btn btn-secondary" onclick="downloadStarAnswers()">Download My Answers</button>
+      </div>
+
+      <div class="prompt-box" id="interview-prompt-box">
+        <h4>Copy this prompt into ChatGPT or Claude:</h4>
+        <div class="prompt-text" id="interview-prompt-text"></div>
+        <button class="btn btn-outline" onclick="copyPrompt('interview-prompt-text','interview-copy-ok')">Copy Prompt</button>
+        <span class="copy-ok" id="interview-copy-ok">Copied!</span>
+      </div>
+    </div>
+
+    <div class="tips-box mt-24">
+      <h3>Best Practices for Behavioral Interviews</h3>
+      <ul>
+        <li><strong>Be specific, not general.</strong> Avoid "I always…" — use one concrete example with real details.</li>
+        <li><strong>Keep it to 2 minutes.</strong> A complete STAR answer should be 90–120 seconds when spoken aloud.</li>
+        <li><strong>Quantify results when possible.</strong> "Increased sales by 15%" is stronger than "helped sales grow."</li>
+        <li><strong>Prepare 6–8 versatile stories.</strong> Strong examples can be adapted to answer multiple questions.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TAB 3: LINKEDIN OPTIMIZER ════ -->
+<section id="tab-linkedin" class="tab-panel" role="tabpanel" aria-labelledby="btn-linkedin">
+  <div class="container">
+    <div class="section-header">
+      <h2>LinkedIn Optimizer</h2>
+      <p>Check off completed profile elements to see your score and generate a personalized AI improvement prompt.</p>
+    </div>
+
+    <div class="li-score-panel">
+      <div class="li-score-row">
+        <div>
+          <div class="score-label">Profile Completion Score</div>
+          <div class="li-score-big" id="li-score-pct">0%</div>
+        </div>
+        <div class="li-score-info">
+          <div class="score-bar-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="li-progress">
+            <div class="score-bar" id="li-score-bar" style="width:0%"></div>
+          </div>
+          <div id="li-score-label" class="score-label">Complete items below to see your score</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="linkedin-checklist"></div>
+
+    <div class="btn-row mt-24">
+      <button class="btn btn-primary" onclick="genLinkedInPrompt()">Generate AI Optimization Prompt</button>
+    </div>
+
+    <div class="prompt-box" id="linkedin-prompt-box">
+      <h4>Copy this prompt into ChatGPT or Claude:</h4>
+      <div class="prompt-text" id="linkedin-prompt-text"></div>
+      <button class="btn btn-outline" onclick="copyPrompt('linkedin-prompt-text','linkedin-copy-ok')">Copy Prompt</button>
+      <span class="copy-ok" id="linkedin-copy-ok">Copied!</span>
+    </div>
+
+    <div class="tips-box mt-24">
+      <h3>LinkedIn Best Practices</h3>
+      <ul>
+        <li><strong>Use keywords from job postings.</strong> LinkedIn's algorithm matches profiles to jobs based on keyword overlap.</li>
+        <li><strong>Update regularly.</strong> Profiles active in the past 30 days appear higher in recruiter searches.</li>
+        <li><strong>Ask for recommendations thoughtfully.</strong> Request them from supervisors who can speak to specific skills.</li>
+        <li><strong>Your headline is your first impression.</strong> Try: "Marketing Student | Social Media &amp; Content Strategy" instead of just "Student."</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-disc">
+      <strong>About This Tool</strong>
+      <p style="margin-top:8px;">This tool is designed for educational purposes to help students learn how AI can support career preparation. Always review and personalize AI-generated content. Your resume, interview answers, and LinkedIn profile should authentically represent your experiences and voice.</p>
+      <p style="margin-top:8px;">Developed by <strong>University of Louisville Libraries</strong>.</p>
+    </div>
+    <div class="footer-actions">
+      <button class="btn-ghost" onclick="exportAllWork()">Export My Work</button>
+      <button class="btn-ghost" onclick="clearAllData()">Clear All Data</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA: COMPETENCY FRAMEWORKS
+// ════════════════════════════════════════════════════════════
+const FRAMEWORKS = {
+  nace: {
+    name: 'NACE Career Readiness Competencies',
+    competencies: [
+      {
+        name: 'Career & Self-Development',
+        keywords: ['self-awareness','goal-setting','goal setting','professional development','career planning','mentorship',
+          'networking','feedback','reflection','growth mindset','lifelong learning','self-directed','initiative',
+          'personal brand','self-assessment','career goals','motivated','driven','ambitious','proactive',
+          'self-improvement','continuous learning','portfolio','certification','introspective'],
+        suggestion: 'Add: professional development, goal-setting, self-directed learning, mentorship, certification pursuits.',
+        verbs: ['pursued','developed','assessed','reflected','networked','mentored','planned','sought']
+      },
+      {
+        name: 'Communication',
+        keywords: ['communicated','presented','wrote','writing','speaking','listening','verbal','written','report',
+          'documented','correspondence','email','articulated','conveyed','explained','briefed','summarized',
+          'drafted','authored','edited','expressed','informed','newsletter','proposal','presentation',
+          'public speaking','facilitated'],
+        suggestion: 'Add: presented to, drafted, authored, prepared reports, facilitated discussions, public speaking.',
+        verbs: ['communicated','presented','drafted','authored','briefed','articulated','documented','facilitated']
+      },
+      {
+        name: 'Critical Thinking',
+        keywords: ['analyzed','evaluated','researched','problem-solving','problem solving','assessed','investigated',
+          'reasoned','synthesized','interpreted','diagnosed','identified','resolved','logical','strategic',
+          'decision-making','conclusions','evidence','data-driven','examined','judgment','judgement',
+          'solutions','reasoning','troubleshot','troubleshoot'],
+        suggestion: 'Add: analyzed, evaluated, identified solutions, data-driven decisions, problem-solving.',
+        verbs: ['analyzed','evaluated','assessed','investigated','resolved','synthesized','reasoned','diagnosed']
+      },
+      {
+        name: 'Equity & Inclusion',
+        keywords: ['diversity','inclusion','equity','cultural competence','belonging','accessibility',
+          'underrepresented','bias','intercultural','multicultural','inclusive','dei','equitable',
+          'advocacy','anti-discrimination','community','representation','welcoming','empathy','respect',
+          'social justice','cultural awareness','sensitivity','marginalized','anti-bias'],
+        suggestion: 'Add: diversity, inclusion, cultural competence, equity initiatives, accessible design.',
+        verbs: ['advocated','promoted','supported','facilitated','championed','engaged','welcomed','represented']
+      },
+      {
+        name: 'Leadership',
+        keywords: ['led','managed','supervised','directed','coordinated','delegated','mentored','coached',
+          'organized','influenced','motivated','spearheaded','founded','chaired','facilitated','oversaw',
+          'guided','empowered','decision-making','vision','strategic','accountability','initiative',
+          'ownership','responsible','captain','president','officer'],
+        suggestion: 'Add: led, managed, supervised, spearheaded, founded, chaired, took ownership of.',
+        verbs: ['led','managed','supervised','spearheaded','founded','organized','guided','empowered']
+      },
+      {
+        name: 'Professionalism',
+        keywords: ['reliable','punctual','accountable','ethical','integrity','professional','deadline','organized',
+          'dependable','committed','responsible','diligent','detail-oriented','follow-through','time management',
+          'work ethic','confidentiality','compliance','standards','trustworthy','consistent','prepared',
+          'meticulous','dedicated'],
+        suggestion: 'Add: deadline-driven, accountable, detail-oriented, reliable, high-integrity.',
+        verbs: ['delivered','maintained','upheld','ensured','adhered','organized','completed','demonstrated']
+      },
+      {
+        name: 'Teamwork',
+        keywords: ['collaborated','cooperated','team','group','cross-functional','partnership','coordinated',
+          'collective','joint','contributed','supported','assisted','shared','unified','consensus','synergy',
+          'interdisciplinary','multidisciplinary','teammates','together','co-developed','co-led',
+          'team member','team player','worked with'],
+        suggestion: 'Add: collaborated, partnered, cross-functional team, contributed to, team player.',
+        verbs: ['collaborated','partnered','coordinated','contributed','supported','unified','co-developed']
+      },
+      {
+        name: 'Technology',
+        keywords: ['software','technology','digital','programming','coding','data analysis','excel','python',
+          'sql','database','system','platform','technical','cybersecurity','it','hardware','application',
+          'automation','ai','machine learning','cloud','saas','proficient','technical skills',
+          'microsoft','google','adobe'],
+        suggestion: 'Add specific tools: Excel, Python, SQL, Salesforce, Adobe, CMS, data analysis tools.',
+        verbs: ['utilized','implemented','configured','developed','automated','analyzed','programmed','maintained']
+      }
+    ]
+  },
+  kycpe: {
+    name: 'KYCPE 10 Essential Employability Skills',
+    competencies: [
+      {
+        name: 'Applied Knowledge',
+        keywords: ['applied','implemented','utilized','practical','hands-on','real-world','industry',
+          'field experience','internship','practicum','capstone','project-based','case study',
+          'on-the-job','applied research','translated','executed','demonstrated','work-based','apprenticeship'],
+        suggestion: 'Add: applied, implemented, internship experience, hands-on, project-based, capstone project.',
+        verbs: ['applied','implemented','executed','demonstrated','utilized','translated','deployed']
+      },
+      {
+        name: 'Effective Relationships',
+        keywords: ['interpersonal','relationship','rapport','trust','collaboration','communication','empathy',
+          'conflict resolution','networking','mentorship','listening','respect','teamwork','partnership',
+          'engagement','emotional intelligence','client relations','customer service','stakeholder','diplomacy'],
+        suggestion: 'Add: client relations, stakeholder engagement, conflict resolution, emotional intelligence.',
+        verbs: ['built','cultivated','fostered','developed','maintained','strengthened','connected','resolved']
+      },
+      {
+        name: 'Workplace Skills',
+        keywords: ['organization','time management','prioritization','multitasking','scheduling','adaptability',
+          'professionalism','attendance','reliability','work ethic','initiative','follow-through',
+          'accountability','performance','efficiency','productivity','goal-setting','planning',
+          'deadline','workflow','organized'],
+        suggestion: 'Add: time management, organized, prioritized, reliable, deadline-driven, productivity.',
+        verbs: ['organized','prioritized','managed','planned','scheduled','delivered','coordinated','streamlined']
+      },
+      {
+        name: 'Community Engagement & Service',
+        keywords: ['volunteer','service learning','community','outreach','civic','nonprofit','advocacy',
+          'social responsibility','service','engaged','impact','local','public service','philanthropy',
+          'organizing','coalition','stewardship','community-based','humanitarian','grassroots'],
+        suggestion: 'Add: volunteer, community outreach, service learning, nonprofit, civic engagement.',
+        verbs: ['volunteered','served','organized','engaged','contributed','supported','advocated','partnered']
+      },
+      {
+        name: 'Critical & Creative Thinking',
+        keywords: ['problem-solving','innovation','creative','brainstorming','design thinking','analyzed',
+          'synthesized','evaluated','ideation','invented','reimagined','prototype','experimented',
+          'hypothesis','research','reasoned','logical','generated solutions','troubleshot','novel approach','innovative'],
+        suggestion: 'Add: innovative solutions, design thinking, creative approach, problem-solving, ideation.',
+        verbs: ['innovated','created','designed','developed','reimagined','solved','brainstormed','prototyped']
+      },
+      {
+        name: 'Health & Wellness',
+        keywords: ['wellness','health','resilience','stress management','balance','self-care','mental health',
+          'physical fitness','mindfulness','sustainability','burnout prevention','healthy habits',
+          'coping','wellbeing','holistic','active','nutrition','safety','first aid','health promotion'],
+        suggestion: 'Add: wellness programs, health promotion, fitness instruction, safety training, mental health advocacy.',
+        verbs: ['promoted','maintained','supported','facilitated','educated','coached','advocated','implemented']
+      },
+      {
+        name: 'Integrated Learning',
+        keywords: ['interdisciplinary','cross-disciplinary','connected','synthesized','applied across',
+          'holistic understanding','linked','integration','bridged','multi-subject','comprehensive',
+          'contextual','systems thinking','transfer','portfolio','synthesis','multidisciplinary'],
+        suggestion: 'Add: interdisciplinary, systems thinking, synthesized learning, applied across disciplines.',
+        verbs: ['synthesized','integrated','connected','applied','bridged','combined','linked','translated']
+      },
+      {
+        name: 'Quantitative Reasoning',
+        keywords: ['data','statistics','quantitative','analysis','excel','budgeting','forecasting',
+          'metrics','kpis','numerical','modeling','financial','calculated','measured','tracked',
+          'reported numbers','research methods','survey','assessment','analytical','statistical',
+          'database','spreadsheet'],
+        suggestion: 'Add: data analysis, metrics, KPIs, budgeting, Excel, statistical analysis, quantifiable results.',
+        verbs: ['analyzed','calculated','measured','tracked','forecasted','modeled','assessed','quantified']
+      },
+      {
+        name: 'Intercultural Knowledge & Competence',
+        keywords: ['intercultural','multilingual','bilingual','language','cultural','global','international',
+          'study abroad','diverse','cross-cultural','cultural awareness','sensitivity','inclusion',
+          'translation','dei','global perspective','worldview','diplomatic','cultural humility',
+          'multicultural','foreign'],
+        suggestion: 'Add: intercultural, multilingual, study abroad, global perspective, cultural competence.',
+        verbs: ['navigated','engaged','collaborated','communicated','adapted','respected','learned','experienced']
+      },
+      {
+        name: 'Digital Technology',
+        keywords: ['digital','technology','software','coding','programming','cybersecurity','social media',
+          'digital literacy','online','platforms','apps','automation','ai tools','data management',
+          'digital communication','multimedia','content creation','technical proficiency','computer',
+          'tech-savvy','digital marketing'],
+        suggestion: 'Add: specific digital tools, social media platforms, CMS, coding languages, digital marketing.',
+        verbs: ['utilized','created','managed','developed','automated','designed','implemented','optimized']
+      }
+    ]
+  }
+};
+
+// ════════════════════════════════════════════════════════════
+// DATA: INTERVIEW QUESTIONS
+// ════════════════════════════════════════════════════════════
+const QUESTIONS = [
+  'Tell me about a time you worked on a team.',
+  'Describe a challenge you overcame.',
+  'Give an example of when you demonstrated leadership.',
+  'Tell me about a time you had to learn something new quickly.',
+  'Describe a situation where you had to meet a tight deadline.',
+  'Tell me about a time you resolved a conflict.',
+  'Give an example of when you showed initiative.',
+  'Describe a time you failed and what you learned from it.',
+  'Tell me about a time you had to adapt to change.',
+  'Give an example of when you improved a process or system.',
+  'Describe a time you worked with someone who was difficult to work with.',
+  'Tell me about a time you had to persuade or influence others.',
+  'Give an example of when you demonstrated creativity.',
+  'Describe a time you received critical feedback and how you responded.',
+  'Tell me about a time you went above and beyond what was expected.'
+];
+
+// ════════════════════════════════════════════════════════════
+// DATA: LINKEDIN CHECKLIST
+// ════════════════════════════════════════════════════════════
+const LI_SECTIONS = [
+  {
+    title: 'Profile Basics',
+    items: [
+      'Professional headshot photo uploaded',
+      'Compelling headline (not just job title — includes value or specialty)',
+      'Custom LinkedIn URL (e.g., linkedin.com/in/yourname)',
+      'Complete contact information included',
+      'Location listed'
+    ]
+  },
+  {
+    title: 'About Section',
+    items: [
+      'About section filled out (at least 200 words)',
+      'Includes career goals or value proposition',
+      'Written in first person voice',
+      'Includes relevant keywords for your target field'
+    ]
+  },
+  {
+    title: 'Experience Section',
+    items: [
+      'At least 2 positions listed (jobs, internships, or significant volunteer roles)',
+      'Bullet points start with strong action verbs',
+      'At least one quantifiable achievement included (numbers, percentages, scale)',
+      'Descriptions focus on impact, not just duties',
+      'Current or most recent role clearly indicated'
+    ]
+  },
+  {
+    title: 'Skills & Endorsements',
+    items: [
+      'At least 10 skills listed',
+      'Top 3 skills are most relevant to career goals',
+      'Skills align with resume and target job descriptions'
+    ]
+  },
+  {
+    title: 'Engagement & Network',
+    items: [
+      'At least 50 connections',
+      'At least 1 recommendation received',
+      'Active in past 30 days (posts, comments, or shares)'
+    ]
+  }
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let resumeChart = null;
+let currentQuestion = null;
+
+// ════════════════════════════════════════════════════════════
+// STORAGE HELPERS
+// ════════════════════════════════════════════════════════════
+function save(key, val) {
+  try { localStorage.setItem('uofl_' + key, JSON.stringify(val)); } catch(e) {}
+}
+function load(key, def) {
+  try {
+    const v = localStorage.getItem('uofl_' + key);
+    return v !== null ? JSON.parse(v) : def;
+  } catch(e) { return def; }
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    save('active_tab', btn.dataset.tab);
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+// RESUME ANALYSIS ENGINE
+// ════════════════════════════════════════════════════════════
+function makeVariants(word) {
+  const w = word.toLowerCase();
+  const base = w.replace(/(?:ing|ed|s|tion|ly|er)$/, '');
+  return new Set([
+    w, w + 's', w + 'ed', w + 'ing', w + 'er', w + 'tion',
+    base, base + 's', base + 'ed', base + 'ing',
+    w.replace(/e$/, 'ing'), w.replace(/y$/, 'ied'), w.replace(/y$/, 'ies')
+  ]);
+}
+
+function matchKeywords(text, keywords) {
+  const lower = text.toLowerCase();
+  return keywords.filter(kw => {
+    const variants = makeVariants(kw);
+    for (const v of variants) {
+      const escaped = v.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      if (new RegExp('\\b' + escaped + '\\b', 'i').test(lower)) return true;
+    }
+    return false;
+  });
+}
+
+function analyzeResume() {
+  const text = document.getElementById('resume-text').value.trim();
+  const fw = document.getElementById('framework-select').value;
+  if (!text) { alert('Please paste your resume text before analyzing.'); return; }
+
+  const framework = FRAMEWORKS[fw];
+  const results = framework.competencies.map(comp => {
+    const matched = matchKeywords(text, comp.keywords);
+    return { ...comp, matched, found: matched.length > 0 };
+  });
+
+  const found = results.filter(r => r.found).length;
+  const total = results.length;
+  const pct = Math.round((found / total) * 100);
+
+  save('resume_text', text);
+  save('resume_fw', fw);
+
+  // Score display
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('score-detail').textContent = found + ' of ' + total + ' competencies detected';
+
+  const classEl = document.getElementById('score-class');
+  if (pct <= 40) {
+    classEl.className = 'score-classification class-needs';
+    classEl.textContent = 'Needs Development';
+  } else if (pct <= 70) {
+    classEl.className = 'score-classification class-good';
+    classEl.textContent = 'Good Foundation';
+  } else {
+    classEl.className = 'score-classification class-strong';
+    classEl.textContent = 'Strong';
+  }
+
+  renderResumeChart(results);
+  renderCompetencyList(results);
+  renderAiPrompt(results);
+
+  const el = document.getElementById('resume-results');
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderResumeChart(results) {
+  const ctx = document.getElementById('resumeChart').getContext('2d');
+  if (resumeChart) resumeChart.destroy();
+  resumeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: results.map(r => r.name.length > 20 ? r.name.slice(0, 18) + '…' : r.name),
+      datasets: [{
+        label: 'Keywords Found',
+        data: results.map(r => r.matched.length),
+        backgroundColor: results.map(r => r.found ? '#AD0000' : '#D0D0D0'),
+        borderColor: results.map(r => r.found ? '#8a0000' : '#bbb'),
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => results[items[0].dataIndex].name,
+            label: (item) => item.raw === 0 ? 'Not detected' : item.raw + ' keyword(s) found'
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, font: { size: 11 } },
+          title: { display: true, text: 'Keywords Found', font: { size: 12 } }
+        },
+        x: { ticks: { font: { size: 10 }, maxRotation: 35 } }
+      }
+    }
+  });
+}
+
+function renderCompetencyList(results) {
+  document.getElementById('comp-list').innerHTML = results.map(r => `
+    <div class="comp-item ${r.found ? 'found' : 'missing'}">
+      <div class="comp-header">
+        <span class="comp-name">${r.name}</span>
+        <span class="badge ${r.found ? 'badge-found' : 'badge-missing'}">${r.found ? '&#10003; Found' : 'Missing'}</span>
+      </div>
+      ${r.found
+        ? `<div class="kw-tags">Matched: ${r.matched.map(k => `<span class="kw-tag">${k}</span>`).join('')}</div>
+           ${r.matched.length < 3 ? `<div class="suggestion">&#128200; Good start! To strengthen: ${r.suggestion}</div>` : ''}`
+        : `<div class="suggestion">&#128161; ${r.suggestion}<br><strong>Action verbs to add:</strong> ${r.verbs.join(', ')}</div>`
+      }
+    </div>
+  `).join('');
+}
+
+function renderAiPrompt(results) {
+  const missing = results.filter(r => !r.found).map(r => r.name);
+  const el = document.getElementById('ai-prompt-area');
+  if (missing.length === 0) {
+    el.innerHTML = '<p style="color:#2E7D32;font-weight:600;font-size:14px;">&#10003; Excellent! All competencies detected. Ask AI to help you quantify achievements and strengthen action verbs.</p>';
+    return;
+  }
+  const promptText = `I'm improving my resume to better reflect workforce competencies. I'm currently missing evidence of: ${missing.join(', ')}.
+
+Review my resume below and for each missing competency:
+1. Suggest 2–3 bullet points I could add based on experiences I may have forgotten
+2. Recommend specific action verbs and language I should use
+3. Ask me clarifying questions to uncover relevant experiences
+
+[Paste your resume here]`;
+  el.innerHTML = `
+    <div class="prompt-text" id="resume-ai-prompt">${promptText}</div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-outline" onclick="copyPrompt('resume-ai-prompt','resume-copy-ok')">Copy This Prompt</button>
+      <span class="copy-ok" id="resume-copy-ok">Copied!</span>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+// INTERVIEW PREP
+// ════════════════════════════════════════════════════════════
+function initInterviewTab() {
+  const sel = document.getElementById('q-select');
+  QUESTIONS.forEach((q, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = q;
+    sel.appendChild(opt);
+  });
+}
+
+function loadQuestion() {
+  const idx = document.getElementById('q-select').value;
+  if (idx === '') {
+    document.getElementById('interview-workspace').style.display = 'none';
+    return;
+  }
+  currentQuestion = QUESTIONS[parseInt(idx)];
+  document.getElementById('q-display').textContent = '“' + currentQuestion + '”';
+  document.getElementById('interview-workspace').style.display = 'block';
+  document.getElementById('interview-prompt-box').style.display = 'none';
+
+  const saved = load('star_' + idx, { s: '', t: '', a: '', r: '' });
+  document.getElementById('star-s').value = saved.s || '';
+  document.getElementById('star-t').value = saved.t || '';
+  document.getElementById('star-a').value = saved.a || '';
+  document.getElementById('star-r').value = saved.r || '';
+  save('last_q', idx);
+}
+
+function saveStarAnswers() {
+  const idx = document.getElementById('q-select').value;
+  if (!idx) return;
+  save('star_' + idx, {
+    s: document.getElementById('star-s').value,
+    t: document.getElementById('star-t').value,
+    a: document.getElementById('star-a').value,
+    r: document.getElementById('star-r').value
+  });
+}
+
+function genInterviewPrompt() {
+  if (!currentQuestion) return;
+  const prompt = `I'm preparing for a job interview. Ask me this question: "${currentQuestion}"
+
+After I answer, give me feedback on:
+1. Whether I used the STAR method effectively (Situation, Task, Action, Result)
+2. Whether my answer was specific enough with concrete details
+3. The overall length and pacing (aim for 90–120 seconds when spoken aloud)
+4. How I could strengthen or quantify my results
+
+Please be encouraging but honest. I'm a college student preparing for my first professional role.`;
+  document.getElementById('interview-prompt-text').textContent = prompt;
+  const box = document.getElementById('interview-prompt-box');
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function downloadStarAnswers() {
+  const idx = document.getElementById('q-select').value;
+  if (!idx || !currentQuestion) { alert('Please select a question first.'); return; }
+  const s = document.getElementById('star-s').value;
+  const t = document.getElementById('star-t').value;
+  const a = document.getElementById('star-a').value;
+  const r = document.getElementById('star-r').value;
+  const content = [
+    'AI CAREER TOOLS WORKSHOP — STAR METHOD PRACTICE',
+    'University of Louisville Libraries',
+    'Generated: ' + new Date().toLocaleDateString(),
+    '',
+    'QUESTION: ' + currentQuestion,
+    '',
+    '── SITUATION ──────────────────────────────',
+    s || '[Not completed]',
+    '',
+    '── TASK ────────────────────────────────────',
+    t || '[Not completed]',
+    '',
+    '── ACTION ──────────────────────────────────',
+    a || '[Not completed]',
+    '',
+    '── RESULT ──────────────────────────────────',
+    r || '[Not completed]',
+    '',
+    '── COMPLETE ANSWER (STAR combined) ─────────',
+    [s, t, a, r].filter(Boolean).join(' ')
+  ].join('\n');
+  downloadFile('star-answers.txt', content);
+}
+
+// ════════════════════════════════════════════════════════════
+// LINKEDIN OPTIMIZER
+// ════════════════════════════════════════════════════════════
+function initLinkedInTab() {
+  const container = document.getElementById('linkedin-checklist');
+  const saved = load('li_checks', {});
+  let idx = 0;
+
+  container.innerHTML = LI_SECTIONS.map(section => {
+    const items = section.items.map(item => {
+      const id = 'li_' + idx;
+      const checked = saved[id] || false;
+      idx++;
+      return `
+        <div class="cl-item">
+          <input type="checkbox" id="${id}" ${checked ? 'checked' : ''} onchange="updateLiScore()">
+          <label for="${id}">${item}</label>
+        </div>`;
+    }).join('');
+    return `<div class="cl-section"><h3>${section.title}</h3>${items}</div>`;
+  }).join('');
+
+  updateLiScore();
+}
+
+function updateLiScore() {
+  const boxes = document.querySelectorAll('#linkedin-checklist input[type="checkbox"]');
+  const saved = {};
+  let checked = 0;
+  boxes.forEach((cb, i) => {
+    if (cb.checked) checked++;
+    saved['li_' + i] = cb.checked;
+  });
+  save('li_checks', saved);
+
+  const total = boxes.length;
+  const pct = Math.round((checked / total) * 100);
+
+  document.getElementById('li-score-pct').textContent = pct + '%';
+  document.getElementById('li-score-bar').style.width = pct + '%';
+  document.getElementById('li-progress').setAttribute('aria-valuenow', pct);
+
+  const bar = document.getElementById('li-score-bar');
+  const lbl = document.getElementById('li-score-label');
+  if (pct <= 50) {
+    bar.style.background = '#C62828'; lbl.style.color = '#C62828';
+    lbl.textContent = checked + '/' + total + ' items — Needs Attention';
+  } else if (pct <= 75) {
+    bar.style.background = '#E65100'; lbl.style.color = '#E65100';
+    lbl.textContent = checked + '/' + total + ' items — Good Start';
+  } else {
+    bar.style.background = '#2E7D32'; lbl.style.color = '#2E7D32';
+    lbl.textContent = checked + '/' + total + ' items — Strong Profile';
+  }
+}
+
+function genLinkedInPrompt() {
+  const boxes = document.querySelectorAll('#linkedin-checklist input[type="checkbox"]');
+  const allItems = LI_SECTIONS.flatMap(s => s.items);
+  const unchecked = [];
+  boxes.forEach((cb, i) => { if (!cb.checked) unchecked.push(allItems[i]); });
+
+  let promptText;
+  if (unchecked.length === 0) {
+    promptText = `My LinkedIn profile is fully complete — I've checked all 20 profile elements.
+
+Please help me take my profile to the next level:
+1. Review my About section and suggest ways to make it more compelling
+2. Help me write a stronger headline that will attract recruiters in my field
+3. Suggest what types of posts or content I should share to increase visibility
+4. Give me tips on how to request recommendations effectively`;
+  } else {
+    promptText = `I want to improve my LinkedIn profile. Here are the areas I haven't completed yet:\n\n${unchecked.map((item, i) => (i + 1) + '. ' + item).join('\n')}\n\nFor each missing area:\n1. Explain why this element matters for my job search\n2. Give me specific, actionable advice on how to complete it\n3. Provide 2-3 examples of strong language or content I could use\n\nI'm a college student looking to enter [my target field — please fill this in]. Please make your suggestions practical and specific to someone early in their career.`;
+  }
+
+  document.getElementById('linkedin-prompt-text').textContent = promptText;
+  const box = document.getElementById('linkedin-prompt-box');
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+function copyPrompt(sourceId, msgId) {
+  const el = document.getElementById(sourceId);
+  const text = el ? el.textContent : '';
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  }).finally(() => {
+    const msg = document.getElementById(msgId);
+    if (msg) { msg.classList.add('show'); setTimeout(() => msg.classList.remove('show'), 2000); }
+  });
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ════════════════════════════════════════════════════════════
+// EXPORT ALL WORK
+// ════════════════════════════════════════════════════════════
+function exportAllWork() {
+  const lines = [
+    'AI CAREER TOOLS WORKSHOP — FULL EXPORT',
+    'University of Louisville Libraries',
+    'Generated: ' + new Date().toLocaleString(),
+    '',
+    '════════════════════════════════════════',
+    'TAB 1: RESUME REVIEW',
+    '════════════════════════════════════════',
+  ];
+
+  const fw = document.getElementById('framework-select').value;
+  lines.push('Framework: ' + FRAMEWORKS[fw].name);
+  const scorePct = document.getElementById('score-pct').textContent;
+  if (scorePct !== '—') {
+    lines.push('Score: ' + scorePct + ' — ' + document.getElementById('score-class').textContent);
+  }
+
+  lines.push('', '════════════════════════════════════════');
+  lines.push('TAB 2: INTERVIEW PREP — SAVED ANSWERS');
+  lines.push('════════════════════════════════════════');
+  let anyStarAnswers = false;
+  QUESTIONS.forEach((q, i) => {
+    const saved = load('star_' + i, null);
+    if (saved && (saved.s || saved.t || saved.a || saved.r)) {
+      anyStarAnswers = true;
+      lines.push('', 'Q: ' + q);
+      if (saved.s) lines.push('S: ' + saved.s);
+      if (saved.t) lines.push('T: ' + saved.t);
+      if (saved.a) lines.push('A: ' + saved.a);
+      if (saved.r) lines.push('R: ' + saved.r);
+    }
+  });
+  if (!anyStarAnswers) lines.push('No STAR answers saved yet.');
+
+  lines.push('', '════════════════════════════════════════');
+  lines.push('TAB 3: LINKEDIN OPTIMIZER');
+  lines.push('════════════════════════════════════════');
+  lines.push('Score: ' + document.getElementById('li-score-pct').textContent +
+    ' — ' + document.getElementById('li-score-label').textContent);
+
+  const boxes = document.querySelectorAll('#linkedin-checklist input[type="checkbox"]');
+  let boxIdx = 0;
+  LI_SECTIONS.forEach(section => {
+    lines.push('', section.title + ':');
+    section.items.forEach(item => {
+      const cb = boxes[boxIdx++];
+      lines.push((cb && cb.checked ? '✓' : '○') + ' ' + item);
+    });
+  });
+
+  downloadFile('uofl-career-workshop-export.txt', lines.join('\n'));
+}
+
+// ════════════════════════════════════════════════════════════
+// CLEAR ALL DATA
+// ════════════════════════════════════════════════════════════
+function clearAllData() {
+  if (!confirm('Clear all saved data including your resume, STAR answers, and LinkedIn checklist?')) return;
+  Object.keys(localStorage).filter(k => k.startsWith('uofl_')).forEach(k => localStorage.removeItem(k));
+  document.getElementById('resume-text').value = '';
+  document.getElementById('resume-results').style.display = 'none';
+  document.getElementById('q-select').value = '';
+  document.getElementById('interview-workspace').style.display = 'none';
+  document.querySelectorAll('#linkedin-checklist input[type="checkbox"]').forEach(cb => cb.checked = false);
+  updateLiScore();
+  if (resumeChart) { resumeChart.destroy(); resumeChart = null; }
+  alert('All data cleared.');
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+(function init() {
+  // Restore resume
+  const savedText = load('resume_text', '');
+  const savedFw = load('resume_fw', 'nace');
+  if (savedText) document.getElementById('resume-text').value = savedText;
+  document.getElementById('framework-select').value = savedFw;
+
+  // Interview questions
+  initInterviewTab();
+  const lastQ = load('last_q', null);
+  if (lastQ !== null) {
+    document.getElementById('q-select').value = lastQ;
+    loadQuestion();
+  }
+
+  // LinkedIn checklist
+  initLinkedInTab();
+
+  // Restore active tab
+  const lastTab = load('active_tab', 'resume');
+  const btn = document.querySelector(`.tab-btn[data-tab="${lastTab}"]`);
+  if (btn) btn.click();
+})();
+</script>
+</body>
+</html>
