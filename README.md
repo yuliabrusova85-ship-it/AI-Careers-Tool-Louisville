@@ -1,5 +1,7 @@
 # AI Career Tools Workshop Simulator
 
+**Live:** https://yuliabrusova85-ship-it.github.io/AI-Careers-Tool-Louisville/
+
 A single-file browser application built for **University of Louisville Libraries** to teach students how to use AI responsibly in their job search. Designed for library instruction sessions and career readiness workshops.
 
 ## Live Use
